@@ -1,0 +1,6 @@
+**/*.ipynb_checkpoints/
+assets/
+corpus/
+training/
+packages/
+git_init.sh
