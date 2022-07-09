@@ -1,30 +1,31 @@
 convert:
   cmd: python -m spacy run convert
   script:
-    - python scripts/convert.py en assets/train.jsonl corpus/train.spacy
-    - python scripts/convert.py en assets/dev.jsonl corpus/dev.spacy
+    - python scripts/convert.py en assets/labelled_submissions_all_6293.jsonl 60
   deps:
-    - path: assets/train.jsonl
-      md5: edfff7a9892ce341d6ea217726801a00
-    - path: assets/dev.jsonl
-      md5: edfff7a9892ce341d6ea217726801a00
+    - path: assets/labelled_submissions_all_6293.jsonl
+      md5: 154c31f465f79319c97a2d2da6da2fe7
     - path: scripts/convert.py
-      md5: b15dfb08e45c4a8ed8656c4099e852e0
+      md5: 4c54fd3ceb8a500e4ec90f433240b1ba
   outs:
     - path: corpus/train.spacy
-      md5: ccb611f5a6ecf2e5d01962930f47d614
+      md5: 679dcfe129ca27a0f01f249a427f82f3
     - path: corpus/dev.spacy
-      md5: ccb611f5a6ecf2e5d01962930f47d614
+      md5: 16558d0109953e12eafc77221fb1af43
+    - path: corpus/test.spacy
+      md5: b4fd8acb2cacc334915f6c713baf76fb
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 create-config:
   cmd: python -m spacy run create-config
   script:
-    - python -m spacy init config --lang en --pipeline ner configs/config.cfg --force
-  deps: []
+    - python scripts/create_config.py en_core_web_trf ner configs/config.cfg
+  deps:
+    - path: scripts/create_config.py
+      md5: 312ab1b0041ff48db711a57eab644ed4
   outs:
     - path: configs/config.cfg
-      md5: 89958efd9faccb2e4374ae2544ebd215
+      md5: 718bc59942c43de3cba7977c96e905f7
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 train:
@@ -35,14 +36,14 @@ train:
       50 --gpu-id 0
   deps:
     - path: configs/config.cfg
-      md5: 89958efd9faccb2e4374ae2544ebd215
+      md5: 718bc59942c43de3cba7977c96e905f7
     - path: corpus/train.spacy
-      md5: ccb611f5a6ecf2e5d01962930f47d614
+      md5: 679dcfe129ca27a0f01f249a427f82f3
     - path: corpus/dev.spacy
-      md5: ccb611f5a6ecf2e5d01962930f47d614
+      md5: 16558d0109953e12eafc77221fb1af43
   outs:
     - path: training/model-best
-      md5: 29e664267c3089f8ef234cce17baaa91
+      md5: 5be905d0fefd3f6551290a7b3f7ea97d
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 evaluate:
@@ -51,11 +52,43 @@ evaluate:
     - python -m spacy evaluate training/model-best corpus/dev.spacy --output training/metrics.json
   deps:
     - path: corpus/dev.spacy
-      md5: ccb611f5a6ecf2e5d01962930f47d614
+      md5: 16558d0109953e12eafc77221fb1af43
     - path: training/model-best
-      md5: 29e664267c3089f8ef234cce17baaa91
+      md5: 5be905d0fefd3f6551290a7b3f7ea97d
   outs:
     - path: training/metrics.json
-      md5: 4b9a5b214b0e138c71780daf16338c26
+      md5: b8c80cc808c704d7207e26aba681dbfe
+  spacy_version: 3.3.1
+  spacy_git_version: 5fb597f77
+visualize-model:
+  cmd: python -m spacy run visualize-model
+  script:
+    - python scripts/visualize_model.py training/model-best "I saw Shaka Khan in London."
+      images/example_vis.html
+  deps:
+    - path: scripts/visualize_model.py
+      md5: a8711d5b9a800831c7d60021766b88a6
+    - path: training/model-best
+      md5: 7666a57968b35515d38a805956ba5aaa
+  outs:
+    - path: images/example_vis.html
+      md5: 54459cfd1bd206c21af7917dae269ba0
+  spacy_version: 3.3.1
+  spacy_git_version: 5fb597f77
+init:
+  cmd: python -m spacy run init
+  script:
+    - python -m spacy init labels configs/config.cfg corpus/labels --paths.train corpus/train.spacy
+      --paths.dev corpus/dev.spacy --gpu-id 0
+  deps:
+    - path: configs/config.cfg
+      md5: 718bc59942c43de3cba7977c96e905f7
+  outs:
+    - path: corpus/labels/ner.json
+      md5: 3a0a768826d6b14d0668db8bffd856ae
+    - path: corpus/labels/parser.json
+      md5: 940f2149459c98063e2ee980834823c4
+    - path: corpus/labels/tagger.json
+      md5: 362d5efb2c2fd0a7cb97cce10a8cf4b6
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77

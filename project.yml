@@ -6,9 +6,7 @@ vars:
   name: "ner_train"
   lang: "en"
   pipeline: "en_core_web_trf"
-  train: "train.jsonl"
-  dev: "dev.jsonl"
-  valid: "valid.jsonl"
+  raw: "labelled_submissions_all_6293.jsonl"
   version: "0.0.0"
   # Set your GPU ID, -1 is CPU
   gpu_id: 0
@@ -16,20 +14,14 @@ vars:
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "corpus", "configs", "training", "scripts", "packages"]
+directories: ["assets", "corpus", "configs", "images", "training", "scripts", "packages"]
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded.
 assets:
-  - dest: "assets/${vars.train}"
-#    checksum: 5aef985b36ab55da02fe9b06ed25a73f
-    description: "Training data output from Doccano with id, data, and label fields."  
-  - dest: "assets/${vars.dev}"
-#    checksum: d92d6acbdbaacd11f748413cb2abbd9c
-    description: "Used for evaluating the model during training."
-  - dest: "assets/${vars.valid}"
-#    checksum: 
-    description: "Used for validating the completed NER system."
+  - dest: "assets/${vars.raw}"
+    checksum:
+    description: "Data export from Doccano in jsonl format with id, data, and label fields." 
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
@@ -38,6 +30,7 @@ workflows:
   all:
     - convert
     - create-config
+    - init
     - train
     - evaluate
 
@@ -52,28 +45,42 @@ commands:
     script:
       - "python -m spacy download ${vars.pipeline}"
 
+  - name: "train-test-dev-test"
+    help: "Split jsonls into train-dev-test files"
+    script:
+      - "python scripts/train-dev-test.py 60"
+
   - name: "convert"
     help: "Convert the data to spaCy's binary format"
     script:
-      - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/train.spacy"
-      - "python scripts/convert.py ${vars.lang} assets/${vars.dev} corpus/dev.spacy"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.raw} 60"
     deps:
-      - "assets/${vars.train}"
-      - "assets/${vars.dev}"
+      - "assets/${vars.raw}"
       - "scripts/convert.py"
     outputs:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
-      
+      - "corpus/test.spacy"
       
   - name: "create-config"
-    help: "Create a config for replacing only NER from an existing pipeline"
+    help: "Create a config for updating only NER from an existing pipeline"
     script:
       - "python scripts/create_config.py ${vars.pipeline} ner configs/config.cfg"
     deps:
       - "scripts/create_config.py"
     outputs:
       - "configs/config.cfg"
+      
+  - name: "init"
+    help: "Create custom labels (if any), so the NER knows what to look for in the dataset."
+    script:
+      - "python -m spacy init labels configs/config.cfg corpus/labels --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "configs/config.cfg"
+    outputs:
+      - "corpus/labels/ner.json"
+      - "corpus/labels/parser.json"
+      - "corpus/labels/tagger.json"
       
   - name: "train"
     help: "Train the NER model"
@@ -108,10 +115,12 @@ commands:
   - name: "visualize-model"
     help: "Visualize the model's output interactively using Streamlit"
     script:
-      - "streamlit run scripts/visualize_model.py training/model-best \"I saw Shaka Khan in London.\""
+      - "python scripts/visualize_model.py training/model-best \"I saw Shaka Khan in London.\" images/example_vis.html"
     deps:
       - "scripts/visualize_model.py"
       - "training/model-best"
+    outputs:
+      - "images/example_vis.html"
       
   - name: "push_to_hub"
     help: "Upload the trained model to the Hugging Face Hub"
