@@ -1,19 +1,19 @@
 convert:
   cmd: python -m spacy run convert
   script:
-    - python scripts/convert.py en assets/revised_labels_all.jsonl 60
+    - python scripts/convert.py en assets/cleaned_revised_all.jsonl 60
   deps:
-    - path: assets/revised_labels_all.jsonl
-      md5: b2cdc96c6dd8d9950f2ae736cd11d54c
+    - path: assets/cleaned_revised_all.jsonl
+      md5: 5c446b307029fbee3420dcd56f894a0f
     - path: scripts/convert.py
       md5: a35a7d6faf3705dc83094de46d797577
   outs:
     - path: corpus/train.spacy
-      md5: 18b222f76c76f1fd1ccde4c5f1ee8c46
+      md5: 109ae24857130f101a13ef3c30db6ff9
     - path: corpus/dev.spacy
-      md5: 0d4d85c372b1733500a40accd757cf65
+      md5: 62e709abe9dfe94b27fffbf7a23d832f
     - path: corpus/test.spacy
-      md5: 1ce21e75ac08a438906e3c32714eabe0
+      md5: f8f92fab9236e147e4cb6ae8fc328950
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 create-config:
@@ -31,19 +31,18 @@ create-config:
 train:
   cmd: python -m spacy run train
   script:
-    - python -m spacy train configs/filled_config.cfg --output training/ --paths.train
-      corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10
-      --training.patience 50 --gpu-id 0
+    - python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy
+      --paths.dev corpus/dev.spacy --gpu-id 0
   deps:
-    - path: configs/filled_config.cfg
-      md5: c85ac5760d0a58d87fe2dec024ea865c
+    - path: configs/config.cfg
+      md5: b2b2b384264faf4a5c1426c669521366
     - path: corpus/train.spacy
-      md5: 58a6c0d6f60b2004ac71c892c97bcacc
+      md5: 109ae24857130f101a13ef3c30db6ff9
     - path: corpus/dev.spacy
-      md5: 21efd467e285a96594a148cd403d55c0
+      md5: 62e709abe9dfe94b27fffbf7a23d832f
   outs:
     - path: training/model-best
-      md5: f937ec6cc463710c57274e24dc2aeef7
+      md5: 9a8a3df27d1138efebdca7589e4e59c6
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 evaluate:
@@ -53,27 +52,28 @@ evaluate:
       --gpu-id 0
   deps:
     - path: corpus/dev.spacy
-      md5: 21efd467e285a96594a148cd403d55c0
+      md5: 62e709abe9dfe94b27fffbf7a23d832f
     - path: training/model-best
-      md5: f937ec6cc463710c57274e24dc2aeef7
+      md5: 9a8a3df27d1138efebdca7589e4e59c6
   outs:
     - path: training/metrics.json
-      md5: 0984697edaf2a5d37af1db7c78fb8c17
+      md5: 507dc58034d4abc3823f21a57a68d656
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 visualize-model:
   cmd: python -m spacy run visualize-model
   script:
-    - python scripts/visualize_model.py training/model-best "I saw Shaka Khan in London."
-      images/example_vis.html
+    - python scripts/visualize_model.py training/model-best "My name is Henrietta.
+      This paper was written and developed by Margaret. According to Roland Barthes,
+      Methylene is the best chemical." images/example_vis.html
   deps:
     - path: scripts/visualize_model.py
       md5: a8711d5b9a800831c7d60021766b88a6
     - path: training/model-best
-      md5: 7666a57968b35515d38a805956ba5aaa
+      md5: 571b24283dfe62c4ad719e73ff987946
   outs:
     - path: images/example_vis.html
-      md5: 54459cfd1bd206c21af7917dae269ba0
+      md5: 07b03f3565259018ce3a9a18c82916df
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 init:

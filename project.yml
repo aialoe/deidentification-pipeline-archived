@@ -6,7 +6,7 @@ vars:
   name: "ner_train"
   lang: "en"
   pipeline: "en_core_web_trf"
-  raw: "revised_labels_all.jsonl"
+  raw: "cleaned_revised_all.jsonl"
   version: "0.0.0"
   # Set your GPU ID, -1 is CPU
   gpu_id: 0
@@ -88,7 +88,7 @@ commands:
   - name: "visualize-model"
     help: "Visualize the model's output interactively."
     script:
-      - "python scripts/visualize_model.py training/model-best \"I saw Shaka Khan in London.\" images/example_vis.html"
+      - "python scripts/visualize_model.py training/model-best \"My name is Henrietta. This paper was written and developed by Henrietta. According to Margaret Thatcher, methylene is the best chemical, but Juan disagrees. Henrietta | Page 2\" images/example_vis.html"
     deps:
       - "scripts/visualize_model.py"
       - "training/model-best"
