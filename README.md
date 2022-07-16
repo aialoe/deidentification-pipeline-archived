@@ -2,7 +2,7 @@
 
 <a href="https://aialoe.org/"><img src="https://aialoe.org/wp-content/uploads/2021/11/AI-ALOE-150.jpg" width="125" height="125" align="right" /></a>
 
-This deidentification pipeline updates a named entity recognizer (NER) with labelled data from [Doccano](https://github.com/doccano/doccano). The only requirement is a json lines file in the "assets" directory with labelled PII. At AI-ALOE, we are developing and testing systems to obfuscate personally identifiable information (PII) from student-generated texts. 
+This deidentification pipeline updates a named entity recognizer (NER) with labelled data from [Doccano](https://github.com/doccano/doccano). At AI-ALOE, we are developing and testing systems to obfuscate personally identifiable information (PII) from student-generated texts. The only requirement is a json lines file in the "assets" directory with labelled PII.
 
 We have plans to extend this system using weak supervision with [skweak](https://github.com/NorskRegnesentral/skweak). We also want to  integrate our spaCy pipeline with [Microsoft Presidio](https://microsoft.github.io/presidio/), which will allow us to evaluate and combine predictions more effectively.
 

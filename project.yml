@@ -6,7 +6,7 @@ vars:
   name: "ner_train"
   lang: "en"
   pipeline: "en_core_web_trf"
-  raw: "labelled_submissions_all_6293.jsonl"
+  raw: "revised_labels_all.jsonl"
   version: "0.0.0"
   # Set your GPU ID, -1 is CPU
   gpu_id: 0
@@ -29,8 +29,6 @@ assets:
 workflows:
   all:
     - convert
-    - create-config
-    - init
     - train
     - evaluate
 
@@ -45,13 +43,8 @@ commands:
     script:
       - "python -m spacy download ${vars.pipeline}"
 
-  - name: "train-test-dev-test"
-    help: "Split jsonls into train-dev-test files"
-    script:
-      - "python scripts/train-dev-test.py 60"
-
   - name: "convert"
-    help: "Convert the data to spaCy's binary format"
+    help: "Convert the data to spaCy's binary format. This script assumes a assets/${vars.raw} is a json lines file with three fields per line: id, data, and label. Data should be the raw utf-8 text. Label should be a list of start, end, label_name lists."
     script:
       - "python scripts/convert.py ${vars.lang} assets/${vars.raw} 60"
     deps:
@@ -62,30 +55,10 @@ commands:
       - "corpus/dev.spacy"
       - "corpus/test.spacy"
       
-  - name: "create-config"
-    help: "Create a config for updating only NER from an existing pipeline"
-    script:
-      - "python scripts/create_config.py ${vars.pipeline} ner configs/config.cfg"
-    deps:
-      - "scripts/create_config.py"
-    outputs:
-      - "configs/config.cfg"
-      
-  - name: "init"
-    help: "Create custom labels (if any), so the NER knows what to look for in the dataset."
-    script:
-      - "python -m spacy init labels configs/config.cfg corpus/labels --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --gpu-id ${vars.gpu_id}"
-    deps:
-      - "configs/config.cfg"
-    outputs:
-      - "corpus/labels/ner.json"
-      - "corpus/labels/parser.json"
-      - "corpus/labels/tagger.json"
-      
   - name: "train"
     help: "Train the NER model"
     script:
-      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.patience 50 --gpu-id ${vars.gpu_id}"
+      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --gpu-id ${vars.gpu_id}"
     deps:
       - "configs/config.cfg"
       - "corpus/train.spacy"
@@ -96,7 +69,7 @@ commands:
   - name: "evaluate"
     help: "Evaluate the model and export metrics"
     script:
-      - "python -m spacy evaluate training/model-best corpus/dev.spacy --output training/metrics.json"
+      - "python -m spacy evaluate training/model-best corpus/dev.spacy --output training/metrics.json --gpu-id ${vars.gpu_id}"
     deps:
       - "corpus/dev.spacy"
       - "training/model-best"
@@ -113,7 +86,7 @@ commands:
       - "packages/${vars.lang}_${vars.name}-${vars.version}/dist/${vars.lang}_${vars.name}-${vars.version}.tar.gz"
 
   - name: "visualize-model"
-    help: "Visualize the model's output interactively using Streamlit"
+    help: "Visualize the model's output interactively."
     script:
       - "python scripts/visualize_model.py training/model-best \"I saw Shaka Khan in London.\" images/example_vis.html"
     deps:

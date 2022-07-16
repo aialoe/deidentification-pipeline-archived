@@ -15,11 +15,14 @@ from sklearn.model_selection import train_test_split
 
 def main(lang: str, input_path: Path, train_percent: int):
     raw = list(srsly.read_jsonl(input_path))
-    train, _remains = train_test_split(raw, train_size=train_percent/100, random_state=0)
-    dev, test = train_test_split(_remains, train_size=0.5, random_state=0)
-    convert(lang, train, 'corpus/train.spacy')
-    convert(lang, dev, 'corpus/dev.spacy')
-    convert(lang, test, 'corpus/test.spacy')
+    if any([key not in raw[0].keys() for key in ['id', 'data', 'label']]):
+        warnings.warn("Raw data is expected to be json lines with id, data, label keys.")
+    else:
+        train, _remains = train_test_split(raw, train_size=train_percent/100, random_state=0)
+        dev, test = train_test_split(_remains, train_size=0.5, random_state=0)
+        convert(lang, train, 'corpus/train.spacy')
+        convert(lang, dev, 'corpus/dev.spacy')
+        convert(lang, test, 'corpus/test.spacy')
     
     
 def convert(lang: str, text_lines: list, output_path: str):
@@ -33,13 +36,11 @@ def convert(lang: str, text_lines: list, output_path: str):
         for start, end, label in line['label']:
             span = doc.char_span(start, end, label=label, alignment_mode="strict")
             if span is None:
-                msg = f"Expanding entity [{start}, {end}, {label}] because the character span '{doc.text[start:end]}' does not align with token boundaries:\n\n"
-                warnings.warn(msg)
+                msg = f"Document: {line['id']}\nEntity [{start}, {end}, {label}] does not align with token boundaries.\nOriginal entity was '{doc.text[start:end]}'"
                 span = doc.char_span(start, end, label=label, alignment_mode="expand")
-                msg = f"Entity was recorded as {span}.\n"
+                msg += f"\nAttempting to set entity as '{span}'"
                 warnings.warn(msg)
-            else:
-                ents.append(span)
+            ents.append(span)
         doc.ents = ents
         db.add(doc)
     db.to_disk(Path(output_path))

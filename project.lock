@@ -1,19 +1,19 @@
 convert:
   cmd: python -m spacy run convert
   script:
-    - python scripts/convert.py en assets/labelled_submissions_all_6293.jsonl 60
+    - python scripts/convert.py en assets/revised_labels_all.jsonl 60
   deps:
-    - path: assets/labelled_submissions_all_6293.jsonl
-      md5: 154c31f465f79319c97a2d2da6da2fe7
+    - path: assets/revised_labels_all.jsonl
+      md5: b2cdc96c6dd8d9950f2ae736cd11d54c
     - path: scripts/convert.py
-      md5: 4c54fd3ceb8a500e4ec90f433240b1ba
+      md5: a35a7d6faf3705dc83094de46d797577
   outs:
     - path: corpus/train.spacy
-      md5: 679dcfe129ca27a0f01f249a427f82f3
+      md5: 18b222f76c76f1fd1ccde4c5f1ee8c46
     - path: corpus/dev.spacy
-      md5: 16558d0109953e12eafc77221fb1af43
+      md5: 0d4d85c372b1733500a40accd757cf65
     - path: corpus/test.spacy
-      md5: b4fd8acb2cacc334915f6c713baf76fb
+      md5: 1ce21e75ac08a438906e3c32714eabe0
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 create-config:
@@ -22,42 +22,43 @@ create-config:
     - python scripts/create_config.py en_core_web_trf ner configs/config.cfg
   deps:
     - path: scripts/create_config.py
-      md5: 312ab1b0041ff48db711a57eab644ed4
+      md5: 7d9930659adc39aef19d8b3120e8d87e
   outs:
     - path: configs/config.cfg
-      md5: 718bc59942c43de3cba7977c96e905f7
+      md5: 7d05830b75ca267bbb9a9f1b59836a10
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 train:
   cmd: python -m spacy run train
   script:
-    - python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy
-      --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.patience
-      50 --gpu-id 0
+    - python -m spacy train configs/filled_config.cfg --output training/ --paths.train
+      corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10
+      --training.patience 50 --gpu-id 0
   deps:
-    - path: configs/config.cfg
-      md5: 718bc59942c43de3cba7977c96e905f7
+    - path: configs/filled_config.cfg
+      md5: c85ac5760d0a58d87fe2dec024ea865c
     - path: corpus/train.spacy
-      md5: 679dcfe129ca27a0f01f249a427f82f3
+      md5: 58a6c0d6f60b2004ac71c892c97bcacc
     - path: corpus/dev.spacy
-      md5: 16558d0109953e12eafc77221fb1af43
+      md5: 21efd467e285a96594a148cd403d55c0
   outs:
     - path: training/model-best
-      md5: 5be905d0fefd3f6551290a7b3f7ea97d
+      md5: f937ec6cc463710c57274e24dc2aeef7
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 evaluate:
   cmd: python -m spacy run evaluate
   script:
     - python -m spacy evaluate training/model-best corpus/dev.spacy --output training/metrics.json
+      --gpu-id 0
   deps:
     - path: corpus/dev.spacy
-      md5: 16558d0109953e12eafc77221fb1af43
+      md5: 21efd467e285a96594a148cd403d55c0
     - path: training/model-best
-      md5: 5be905d0fefd3f6551290a7b3f7ea97d
+      md5: f937ec6cc463710c57274e24dc2aeef7
   outs:
     - path: training/metrics.json
-      md5: b8c80cc808c704d7207e26aba681dbfe
+      md5: 0984697edaf2a5d37af1db7c78fb8c17
   spacy_version: 3.3.1
   spacy_git_version: 5fb597f77
 visualize-model:
@@ -78,11 +79,11 @@ visualize-model:
 init:
   cmd: python -m spacy run init
   script:
-    - python -m spacy init labels configs/config.cfg corpus/labels --paths.train corpus/train.spacy
-      --paths.dev corpus/dev.spacy --gpu-id 0
+    - python -m spacy init labels configs/config.cfg corpus/labels --verbose --gpu-id
+      0 --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy
   deps:
     - path: configs/config.cfg
-      md5: 718bc59942c43de3cba7977c96e905f7
+      md5: 140c5ded099325bca8e2b0bd3bb00624
   outs:
     - path: corpus/labels/ner.json
       md5: 3a0a768826d6b14d0668db8bffd856ae
