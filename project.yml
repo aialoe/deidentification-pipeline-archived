@@ -46,7 +46,7 @@ commands:
   - name: "convert"
     help: "Convert the data to spaCy's binary format. This script assumes a assets/${vars.raw} is a json lines file with three fields per line: id, data, and label. Data should be the raw utf-8 text. Label should be a list of start, end, label_name lists."
     script:
-      - "python scripts/convert.py ${vars.lang} assets/${vars.raw} 60"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.raw} corpus 60"
     deps:
       - "assets/${vars.raw}"
       - "scripts/convert.py"

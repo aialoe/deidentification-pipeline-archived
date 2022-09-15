@@ -10,26 +10,32 @@ import spacy
 from spacy.tokens import Doc, DocBin
 if not Doc.has_extension('name'):
     Doc.set_extension('name', default=None)
-    
+
+import line_extension
+
 from sklearn.model_selection import train_test_split
 
-def main(lang: str, input_path: Path, train_percent: int):
+def main(lang: str, input_path: Path, output_path: Path, train_percent: int):
     raw = list(srsly.read_jsonl(input_path))
     if any([key not in raw[0].keys() for key in ['id', 'data', 'label']]):
         warnings.warn("Raw data is expected to be json lines with id, data, label keys.")
+    elif train_percent == 0:
+        warnings.warn('Converting all documents without train-dev-test split.')
+        convert(lang, raw, output_path)
     else:
         train, _remains = train_test_split(raw, train_size=train_percent/100, random_state=0)
         dev, test = train_test_split(_remains, train_size=0.5, random_state=0)
-        convert(lang, train, 'corpus/train.spacy')
-        convert(lang, dev, 'corpus/dev.spacy')
-        convert(lang, test, 'corpus/test.spacy')
+        convert(lang, train, output_path / 'train.spacy')
+        convert(lang, dev, output_path / 'dev.spacy')
+        convert(lang, test, output_path / 'test.spacy')
     
     
 def convert(lang: str, text_lines: list, output_path: str):
     nlp = spacy.blank(lang)
+    nlp.add_pipe('line_annotator')
     db = DocBin()
     for line in text_lines:
-        text = line['data']
+        text = line_extension.fix_whitespace(line['data'])
         doc = nlp.make_doc(text)
         doc._.name = line['id']
         ents = []
