@@ -18,8 +18,8 @@ def create_config(model_name: str, component_to_update: str, output_path: Path):
         config['training']['score_weights'][score_func] = None
     
     config['training']['score_weights']['ents_f'] = 0
-    config['training']['score_weights']['ents_p'] = .80
-    config['training']['score_weights']['ents_r'] = .20
+    config['training']['score_weights']['ents_p'] = .50
+    config['training']['score_weights']['ents_r'] = .50
     
     # copy tokenizer and vocab settings from the base model, which includes
     # lookups (lexeme_norm) and vectors, so they don't need to be copied or

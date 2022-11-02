@@ -5,7 +5,7 @@ description: "A spaCy project that accepts labelled data in jsonl format and fin
 vars:
   name: "ner_train"
   lang: "en"
-  pipeline: "en_core_web_trf"
+  config: "longformer.cfg"
   raw: "cleaned_revised_all.jsonl"
   version: "0.0.0"
   # Set your GPU ID, -1 is CPU
@@ -38,10 +38,6 @@ workflows:
 # shown when executing "spacy project run [optional command] [path] --help".
 
 commands:
-  - name: "download"
-    help: "Download a spaCy model"
-    script:
-      - "python -m spacy download ${vars.pipeline}"
 
   - name: "convert"
     help: "Convert the data to spaCy's binary format. This script assumes a assets/${vars.raw} is a json lines file with three fields per line: id, data, and label. Data should be the raw utf-8 text. Label should be a list of start, end, label_name lists."
@@ -58,9 +54,9 @@ commands:
   - name: "train"
     help: "Train the NER model"
     script:
-      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --gpu-id ${vars.gpu_id}"
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --gpu-id ${vars.gpu_id}"
     deps:
-      - "configs/config.cfg"
+      - "configs/${vars.config}"
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
     outputs:
