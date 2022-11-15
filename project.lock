@@ -1,21 +1,21 @@
 convert:
   cmd: python -m spacy run convert
   script:
-    - python scripts/convert.py en assets/cleaned_revised_all.jsonl corpus 60
+    - python scripts/convert.py assets/longformer-labeled.spacy 60
   deps:
-    - path: assets/cleaned_revised_all.jsonl
-      md5: 242fc6fed1b7f7c13c42542d2ef5d050
+    - path: assets/longformer-labeled.spacy
+      md5: b4f1922fceae297e4be4d1a977619294
     - path: scripts/convert.py
-      md5: 284cd03a4b55184d3b93664dc75a859f
+      md5: 69a82a67e0931f0a2752bc3163b3927e
   outs:
     - path: corpus/train.spacy
-      md5: 1ec9bbe8a0760361468e81f0dc873d4c
+      md5: cd54c9c00178d3563672ba794e1e2925
     - path: corpus/dev.spacy
-      md5: cf34da60aa995a130e7db3b48402c785
+      md5: 6cad3a7ab431a65e59bbd3a901069e93
     - path: corpus/test.spacy
-      md5: e69f1a883e0319c80c4788b33b11758c
-  spacy_version: 3.4.1
-  spacy_git_version: 5c2a00cef
+      md5: f75c519c5105a6d5d4bdf2009988990c
+  spacy_version: 3.3.1
+  spacy_git_version: 5fb597f77
 create-config:
   cmd: python -m spacy run create-config
   script:
@@ -31,21 +31,20 @@ create-config:
 train:
   cmd: python -m spacy run train
   script:
-    - python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy
-      --paths.dev corpus/dev.spacy --gpu-id 0 --components.transformer.model.name
-      ../2022_06_05_deidentification_of_student_writing_in_moocs/bin/results/v1
+    - python -m spacy train configs/longformer.cfg --output training/ --paths.train
+      corpus/train.spacy --paths.dev corpus/dev.spacy --gpu-id 0
   deps:
-    - path: configs/config.cfg
-      md5: null
+    - path: configs/longformer.cfg
+      md5: 9eb0842ab1512e5cc774d139a3400385
     - path: corpus/train.spacy
-      md5: 1ec9bbe8a0760361468e81f0dc873d4c
+      md5: cd54c9c00178d3563672ba794e1e2925
     - path: corpus/dev.spacy
-      md5: cf34da60aa995a130e7db3b48402c785
+      md5: 6cad3a7ab431a65e59bbd3a901069e93
   outs:
     - path: training/model-best
-      md5: 9616c01dc5f316fe26a4e1d96414ad05
-  spacy_version: 3.4.1
-  spacy_git_version: 5c2a00cef
+      md5: 6ab03282c11a64dcb7b6a05378c56870
+  spacy_version: 3.3.1
+  spacy_git_version: 5fb597f77
 evaluate:
   cmd: python -m spacy run evaluate
   script:
@@ -53,14 +52,14 @@ evaluate:
       --gpu-id 0
   deps:
     - path: corpus/dev.spacy
-      md5: cf34da60aa995a130e7db3b48402c785
+      md5: 6cad3a7ab431a65e59bbd3a901069e93
     - path: training/model-best
-      md5: 9616c01dc5f316fe26a4e1d96414ad05
+      md5: 6ab03282c11a64dcb7b6a05378c56870
   outs:
     - path: training/metrics.json
-      md5: 7bfbe9453ed040292c0b142ae6604d58
-  spacy_version: 3.4.1
-  spacy_git_version: 5c2a00cef
+      md5: 1c9d99dc518bf7dfbd07e6fa4b3ad0bf
+  spacy_version: 3.3.1
+  spacy_git_version: 5fb597f77
 visualize-model:
   cmd: python -m spacy run visualize-model
   script:

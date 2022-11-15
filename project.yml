@@ -3,11 +3,11 @@ description: "A spaCy project that accepts labelled data in jsonl format and fin
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  name: "ner_train"
+  name: "student-name-detector"
   lang: "en"
   config: "longformer.cfg"
-  raw: "cleaned_revised_all.jsonl"
-  version: "0.0.0"
+  raw: "cleaned_revised_all.spacy"
+  version: "0.0.1"
   # Set your GPU ID, -1 is CPU
   gpu_id: 0
 
@@ -21,7 +21,7 @@ directories: ["assets", "corpus", "configs", "images", "training", "scripts", "p
 assets:
   - dest: "assets/${vars.raw}"
     checksum:
-    description: "Data export from Doccano in jsonl format with id, data, and label fields." 
+    description: "Data export from Doccano in jsonl format with id, data, and label fields. OR a prepocessed DocBin file with custom entity labels." 
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
@@ -42,7 +42,7 @@ commands:
   - name: "convert"
     help: "Convert the data to spaCy's binary format. This script assumes a assets/${vars.raw} is a json lines file with three fields per line: id, data, and label. Data should be the raw utf-8 text. Label should be a list of start, end, label_name lists."
     script:
-      - "python scripts/convert.py ${vars.lang} assets/${vars.raw} corpus 60"
+      - "python scripts/convert.py assets/${vars.raw} 60"
     deps:
       - "assets/${vars.raw}"
       - "scripts/convert.py"
